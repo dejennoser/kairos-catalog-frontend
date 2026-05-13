@@ -63,7 +63,9 @@ export default function CreateProductForm({ token }) {
         }
       );
 
+     
       alert("✅ Product created successfully");
+      onCreated(); // ✅ refresh product list
 
       // reset form
       setForm({
