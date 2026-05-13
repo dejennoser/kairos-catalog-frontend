@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { api } from "../api/api";
+import { apiV2 } from "../api/api";
 
-export default function CreateProductForm({ token }) {
+export default function CreateProductForm({ token, onCreated }) {
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -50,24 +50,16 @@ export default function CreateProductForm({ token }) {
     images.forEach((img) => formData.append("images", img));
 
     try {
-      // ✅ VERY IMPORTANT: refresh token before POST
-      await window.keycloak.updateToken(30);
+      // ✅ USE TOKEN FROM PROPS — NO window.keycloak
+      await apiV2(token).post("/products", formData);
 
-      await api(window.keycloak.token).post(
-        "/products/with-images",
-        formData,
-        {
-          headers: {
-            "Accept-Language": "de",
-          },
-        }
-      );
-
-     
       alert("✅ Product created successfully");
-      onCreated(); // ✅ refresh product list
 
-      // reset form
+      // ✅ safe call
+      if (onCreated) {
+        onCreated();
+      }
+
       setForm({
         name: "",
         description: "",
@@ -82,12 +74,7 @@ export default function CreateProductForm({ token }) {
       setImages([]);
     } catch (err) {
       console.error("Create product error:", err);
-
-      alert(
-        err.response
-          ? `❌ ${err.response.status}: ${JSON.stringify(err.response.data)}`
-          : "❌ Failed to create product"
-      );
+      alert("❌ Failed to create product");
     }
   };
 

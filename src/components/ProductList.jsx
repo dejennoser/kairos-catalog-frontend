@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { api } from "../api/api";
+import { apiV1 } from "../api/api";
 
 export default function ProductList({ token, reload }) {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    api(token)
+    // ✅ FIX: use apiV1, not api
+    apiV1(token)
       .get("/products", {
         headers: { "Accept-Language": "de" },
       })
@@ -13,7 +14,7 @@ export default function ProductList({ token, reload }) {
       .catch((err) => {
         console.error("Failed to load products:", err);
       });
-  }, [reload, token]); // ✅ re-fetch when reload or token changes
+  }, [reload, token]);
 
   return (
     <div>
@@ -23,19 +24,15 @@ export default function ProductList({ token, reload }) {
 
       {products.map((p) => (
         <div key={p.id} className="card">
-          {/* ✅ Product name */}
           <h3>{p.translatedName ?? p.name}</h3>
 
-          {/* ✅ Product description */}
           {(p.translatedDescription || p.description) && (
             <p>{p.translatedDescription ?? p.description}</p>
           )}
 
-          {/* ✅ Price */}
           <strong>{p.price} CHF</strong>
 
-          {/* ✅ Images */}
-          {p.imageUrls && p.imageUrls.length > 0 && (
+          {Array.isArray(p.imageUrls) && p.imageUrls.length > 0 && (
             <div
               style={{
                 marginTop: 10,
