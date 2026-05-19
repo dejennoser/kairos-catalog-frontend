@@ -25,58 +25,65 @@ export default function CreateProductForm({ token, onCreated }) {
   };
 
   const submit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const product = {
-      name: form.name,
-      description: form.description,
-      price: Number(form.price),
-      category: form.category,
-      stock: Number(form.stock),
-      translations: {
-        en: {
-          name: form.enName,
-          description: form.enDescription,
-        },
-        de: {
-          name: form.deName,
-          description: form.deDescription,
-        },
+  const product = {
+    name: form.name,
+    description: form.description,
+    price: Number(form.price),
+    category: form.category,
+    stock: Number(form.stock),
+    translations: {
+      en: {
+        name: form.enName,
+        description: form.enDescription,
       },
-    };
-
-    const formData = new FormData();
-    formData.append("product", JSON.stringify(product));
-    images.forEach((img) => formData.append("images", img));
-
-    try {
-      // ✅ USE TOKEN FROM PROPS — NO window.keycloak
-      await apiV2(token).post("/products", formData);
-
-      alert("✅ Product created successfully");
-
-      // ✅ safe call
-      if (onCreated) {
-        onCreated();
-      }
-
-      setForm({
-        name: "",
-        description: "",
-        price: "",
-        category: "",
-        stock: "",
-        enName: "",
-        enDescription: "",
-        deName: "",
-        deDescription: "",
-      });
-      setImages([]);
-    } catch (err) {
-      console.error("Create product error:", err);
-      alert("❌ Failed to create product");
-    }
+      de: {
+        name: form.deName,
+        description: form.deDescription,
+      },
+    },
   };
+
+  const formData = new FormData();
+
+  // ✅ IMPORTANT: use Blob (this fixes 415 error)
+  formData.append(
+    "product",
+    new Blob([JSON.stringify(product)], { type: "application/json" })
+  );
+
+  // ✅ append images correctly
+  images.forEach((img) => {
+    formData.append("images", img);
+  });
+
+  try {
+    await apiV2(token).post("/products", formData);
+
+    alert("✅ Product created successfully");
+
+    if (onCreated) onCreated();
+
+    setForm({
+      name: "",
+      description: "",
+      price: "",
+      category: "",
+      stock: "",
+      enName: "",
+      enDescription: "",
+      deName: "",
+      deDescription: "",
+    });
+
+    setImages([]);
+
+  } catch (err) {
+    console.error("Create product error:", err);
+    alert("❌ Failed to create product");
+  }
+};
 
   return (
     <form onSubmit={submit} style={{ marginTop: 30 }}>
